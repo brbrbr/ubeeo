@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="plugin" group="system" method="upgrade">
+  <name>plg_system_ubeeo</name>
+  <author>Bram Brambring</author>
+  <creationDate>18-02-2025</creationDate>
+  <copyright>(C) 2025 Bram Brambring</copyright>
+  <license>GNU General Public License version 3 or later</license>
+  <authorEmail>bram@brambring.nl</authorEmail>
+  <authorUrl>https://brambring.nl</authorUrl>
+  <version>25.01.dev</version>
+  <description>PLG_SYSTEM_UBEEO_XML_DESCRIPTION</description>
+  <namespace path="src">Brambring\Plugin\System\Ubeeo</namespace>
+  <scriptfile>script.php</scriptfile>
+  <files>
+    <folder plugin="ubeeo">services</folder>
+    <folder>src</folder>
+    <file>LEESMIJ.txt</file>
+  </files>
+  <languages>
+    <language tag="en-GB">language/en-GB/plg_system_ubeeo.sys.ini</language>
+    <language tag="en-GB">language/en-GB/plg_system_ubeeo.ini</language>
+  </languages>
+  <config>
+    <fields name="params">
+      <fieldset name="basic">
+        <field name="menuid" type="menuitem" label="PLG_SYSTEM_UBEEO_FIELD_MENUID_LBL" clientid="0" description="PLG_SYSTEM_UBEEO_FIELD_MENUID_DESC"/>
+
+           <field name="titlewrapper" type="string" label="PLG_SYSTEM_UBEEO_FIELD_TITLEWRAPPER_LBL" default="h2" description="PLG_SYSTEM_UBEEO_FIELD_TITLEWRAPPER_DESC"/>
+            <field name="textwrapper" type="string" label="PLG_SYSTEM_UBEEO_FIELD_TEXTWRAPPER_LBL" default="div" description="PLG_SYSTEM_UBEEO_FIELD_TEXTWRAPPER_DESC"/>
+        <field name="cat_id" required="true" label="JCATEGORY" type="category" extension="com_content" description="PLG_SYSTEM_UBEEO_FIELD_CAT_ID_DESC">
+          <option value="">JNONE</option>
+        </field>
+        <field addfieldprefix="Joomla\Component\Fields\Administrator\Field" required="true" context="com_content.article" name="fieldgroup_id" type="fieldgroups" label="PLG_SYSTEM_UBEEO_FIELD_FIELDGROUP_ID_LBL" description="PLG_SYSTEM_UBEEO_FIELD_FIELDGROUP_ID_DESC">
+          <option value="">JNONE</option>
+        </field>
+        <field name="obsolete" label="PLG_SYSTEM_UBEEO_FIELD_OBSOLETE_LBL" default="-1" type="list" description="PLG_SYSTEM_UBEEO_FIELD_OBSOLETE_DESC">
+          <option value="0">JTOOLBAR_UNPUBLISH</option>
+          <option value="2">JTOOLBAR_ARCHIVE</option>
+          <option value="-2">JTOOLBAR_TRASH</option>
+          <option value="-99">JTOOLBAR_DELETE</option>
+        </field>
+        <field name="language" label="PLG_SYSTEM_UBEEO_FIELD_LANGUAGE_LBL" default="NL" type="hidden" description="PLG_SYSTEM_UBEEO_FIELD_LANGUAGE_DESC"/>
+        <field name="user_id" label="PLG_SYSTEM_UBEEO_FIELD_USER_ID_LBL" required="true" type="user" description="PLG_SYSTEM_UBEEO_FIELD_USER_ID_DESC"/>
+        <field name="applicant_token" type="text" required="true" default="" label="PLG_SYSTEM_UBEEO_FIELD_APPLICANT_TOKEN_LBL" description="PLG_SYSTEM_UBEEO_FIELD_APPLICANT_TOKEN_DESC"/>
+        <field name="vacancy_feed_token" type="text" required="true" default="" label="PLG_SYSTEM_UBEEO_FIELD_VACANCY_FEED_TOKEN_LBL" description="PLG_SYSTEM_UBEEO_FIELD_VACANCY_FEED_TOKEN_DESC"/>
+        <field name="environment" type="list" default="" label="PLG_SYSTEM_UBEEO_FIELD_ENVIRONMENT_LBL" description="PLG_SYSTEM_UBEEO_FIELD_ENVIRONMENT_DESC">
+          <option value="PROD">PLG_SYSTEM_UBEEO_FIELD_ENVIRONMENT_PROD_OPTION</option>
+          <option value="TEST">PLG_SYSTEM_UBEEO_FIELD_ENVIRONMENT_TEST_OPTION</option>
+          <option value="DEV">PLG_SYSTEM_UBEEO_FIELD_ENVIRONMENT_DEV_OPTION</option>
+        </field>
+
+        <field name="display" type="list" label="PLG_SYSTEM_UBEEO_FIELD_DISPLAY_LBL" default="3" validate="options">
+          <option value="1">PLG_SYSTEM_UBEEO_FIELD_DISPLAY_1_OPTION</option>
+          <option value="2">PLG_SYSTEM_UBEEO_FIELD_DISPLAY_2_OPTION</option>
+          <option value="3">PLG_SYSTEM_UBEEO_FIELD_DISPLAY_3_OPTION</option>
+          <option value="0">PLG_SYSTEM_UBEEO_FIELD_DISPLAY_0_OPTION</option>
+        </field>
+
+        <field name="display" type="list" label="PLG_SYSTEM_UBEEO_FIELD_DISPLAY_LBL" default="3" validate="options">
+          <option value="1">PLG_SYSTEM_UBEEO_FIELD_DISPLAY_1_OPTION</option>
+          <option value="2">PLG_SYSTEM_UBEEO_FIELD_DISPLAY_2_OPTION</option>
+          <option value="3">PLG_SYSTEM_UBEEO_FIELD_DISPLAY_3_OPTION</option>
+          <option value="0">PLG_SYSTEM_UBEEO_FIELD_DISPLAY_0_OPTION</option>
+        </field>
+        <field name="portal" type="list" label="PLG_SYSTEM_UBEEO_FIELD_PORTAL_LBL" default="3" validate="options">
+          <option value="1">PLG_SYSTEM_UBEEO_FIELD_DISPLAY_1_OPTION</option>
+          <option value="2">PLG_SYSTEM_UBEEO_FIELD_DISPLAY_2_OPTION</option>
+          <option value="3">PLG_SYSTEM_UBEEO_FIELD_DISPLAY_3_OPTION</option>
+          <option value="0">PLG_SYSTEM_UBEEO_FIELD_DISPLAY_0_OPTION</option>
+        </field>
+
+        <field addfieldprefix="Joomla\Component\Content\Administrator\Field" showon="portal!:0" name="portal_id" required="" label="PLG_SYSTEM_UBEEO_FIELD_PORTAL_ID_LBL" type="modal_article" description="PLG_SYSTEM_UBEEO_FIELD_PORTAL_ID_DESC">
+          <option value="">JNONE</option>
+        </field>
+        <field name="cache_time" type="number" filter="integer" default="3600" label="PLG_SYSTEM_UBEEO_FIELD_CACHE_TIME_LBL" description="PLG_SYSTEM_UBEEO_FIELD_CACHE_TIME_DESC"/>
+        <field addfieldprefix="Brambring\Plugin\System\Ubeeo\Field" name="base_link" type="WebcronLink" label="PLG_SYSTEM_UBEEO_FIELD_BASE_LINK_LBL" description="PLG_SYSTEM_UBEEO_FIELD_BASE_LINK_DESC" class="alert alert-info"/>
+      </fieldset>
+    </fields>
+  </config>
+  <updateservers>
+    <server name="brambring.nl" type="extension">https://downloads.brokenlinkchecker.dev/plg_system_ubeeo.xml</server>
+  </updateservers>
+</extension>

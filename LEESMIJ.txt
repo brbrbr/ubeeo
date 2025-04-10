@@ -1,0 +1,91 @@
+- Installeer de plugin
+- Maak een categorie aan
+- Maak een veldgroep aan
+- Maak een menu item (blog) voor bovengenoemde categorie aan.
+- Er is een gebruiker nodig met rechten om veld-waardes te mogen bewerken en artikelen mogen aanpassen en verwijderen.
+   - Geef de gebruiker de rol van redacteur en pass de rechten aan.
+- de plugin kan de code die nodig is voor het kandidaten portaal automatisch toevoegen aan een artikel:
+    - Maak hiervoor een artikel en een single artikel menu aan voor het kandidaten portaal. Deze mag niet in de categorie die hierboven aangemaakt is!
+- voor het uitvoeren van de cron job kun je een Geplande taak aanmaken of een externe CRON via een https request gebruiken. Voor de https request wordt gebruik gemaakt van de sleutel die ook voor de geplande taken Web Cron gebruikt wordt:
+    - Ga naar de instellingen voor de Geplande taken
+    - Schakel de Web Cron in.
+    - Opslaan
+    - Eventueel kan de Web Cron weer uit.
+- Configureer de plugin
+
+
+afhanklelijk van de instellingen zijn de stukjes html code die nodig zijn voor het formulier en het portaal beschikbaar in:
+$this->item->event->afterDisplayTitle;
+$this->item->event->beforeDisplayContent;
+$this->item->event->afterDisplayContent;
+
+--- Handmatig het formulier of de portal code toevoegen
+$plugin = Factory::getApplication()->bootPlugin('ubeeo','system'); 
+echo $plugin->ubeeoFormInsert(id:$this->item->id);
+
+--- gebruik van de vacature id is een query minder
+$vacancyField = $plugin->getVacancyField(false);
+$vacancyId = $this->item->jcfields[$vacancyField]->rawvalue;
+echo $plugin->ubeeoFormInsert(vacancy: $vacancyId, head: false);
+
+//werk je in een module dan kun je de id: ook weglaten. Er wordt dan gekeken of er een artikel actief is.
+//het formulier wordt alleen weergevens als dat artikel in de juiste category heeft en een vacancy-id  veld).
+echo $plugin->ubeeoFormInsert();
+
+
+--- Handmatig het formulier of de portal code toevoegen - voorbeeld met passief laden van script/style en een collapse-button---
+
+
+$plugin = Factory::getApplication()->bootPlugin('ubeeo','system'); 
+?>
+
+<p class="d-inline-flex gap-1">
+    <button id="collapseTrigger" class="btn btn-primary" role="button" aria-expanded="false">
+        Solliciteer
+    </button>
+</p>
+
+<?php
+  $plugin = Factory::getApplication()->bootPlugin('ubeeo', 'system');
+    //1 slag efficiënter is het om de $vacancyId  hard te coderen met de juiste waarde
+    $vacancyField = $plugin->getVacancyField(false);
+    $vacancyId = (int)$this->item->jcfields[$vacancyField]->rawvalue;
+    ?>
+    <div class="d-none hidden" id="collapseUbeeo">
+        <div class="card card-body">
+            <?php
+            echo $plugin->ubeeoFormInsert(vacancy: $vacancyId, head: false);
+            //   echo $plugin->ubeeoFormInsert(id: $this->item->id, head: false);
+            ?>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            let collapseTrigger = document.getElementById('collapseTrigger');
+            let collapseUbeeo = document.getElementById('collapseUbeeo');
+        
+            collapseTrigger.addEventListener('click', function() {
+                loadUbeeoResources();
+                collapseUbeeo.classList.remove("hidden","d-none");
+              //  collapseUbeeo.scrollIntoView();
+            }, {
+                once: true
+            })
+            collapseTrigger.addEventListener('click', function() {
+                collapseUbeeo.scrollIntoView();
+            })
+        })();
+    </script>
+<?php
+
+--- verkrijgen van de vacature id
+$plugin = Factory::getApplication()->bootPlugin('ubeeo','system'); 
+
+$vacancyField = $plugin->getVacancyField(false);
+print $this->item->jcfields[$vacancyField]->rawvalue;
+
+
+
+
+
