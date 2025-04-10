@@ -654,6 +654,7 @@ data-environment=\"{$environment}\">
         if (!empty($articleBody->textBlocks)) {
             $body = [];
             foreach ($articleBody->textBlocks as $block) {
+                $body[]=  sprintf('<!-- %s -->',$block->id);
                 $text = '';
                 if ($block->title ?? '') {
                     $text = sprintf(
