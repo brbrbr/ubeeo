@@ -640,6 +640,11 @@ data-environment=\"{$environment}\">
                 break;
         }
     }
+    /**
+     * In hun WP plugin is 'text' leidend. hier is dat nu omgekeerd.
+     * Als er textBlocks zijn wordt de text overschreven.
+     * 
+     */
     private function getArticleBody($vacancie): object
     {
 
@@ -649,20 +654,25 @@ data-environment=\"{$environment}\">
         if (!empty($articleBody->textBlocks)) {
             $body = [];
             foreach ($articleBody->textBlocks as $block) {
+                $text = '';
                 if ($block->title ?? '') {
-                    $body[] = sprintf(
-                        '<%1$s class="ubeeo-%2$s">%3$s</%1$s>',
+                    $text = sprintf(
+                        '<%1$s>%2$s</%1$s>%3$s', // like in their WP plugin
                         $this->params->get('titlewrapper', 'h2'),
-                        $block->id,
-                        $block->title
+                        $block->title,
+                        $block->text
                     );
+                } else {
+                    $text = $block->text ?? '';
                 }
-                if ($block->text ?? '') {
+
+              if ( $text) {
                     $body[] = sprintf(
-                        '<%1$s class="ubeeo-%2$s">%3$s</%1$s>',
+                        '<%1$s class="ub-text-item ub-text-item-%2$s">%3$s</%1$s>',
                         $this->params->get('textwrapper', 'div'),
                         $block->id,
-                        $block->text
+                        $text
+
                     );
                 }
             }
