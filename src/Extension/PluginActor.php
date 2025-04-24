@@ -10,6 +10,7 @@
 
 namespace Brambring\Plugin\System\Ubeeo\Extension;
 
+use Joomla\CMS\Application\CMSApplication;
 use Joomla\CMS\Cache\CacheControllerFactoryInterface;
 use Joomla\CMS\Cache\Controller\OutputController;
 use Joomla\CMS\Component\ComponentHelper;
@@ -23,7 +24,6 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Http\HttpFactory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Plugin\CMSPlugin;
-use Joomla\CMS\Router\Exception\RouteNotFoundException;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\User\UserFactoryInterface;
@@ -68,8 +68,12 @@ final class PluginActor extends CMSPlugin implements SubscriberInterface
     ];
     public function onAjaxUbeeo(AjaxEvent $event)
     {
-
-        $input = $this->getApplication()->getInput();
+        $app   = $this->getApplication();
+        $input = $app->getInput();
+        if ($app->get('debug', false)) { // debug  will result in memory problems
+            $event->updateEventResult(Text::_("PLG_SYSTEM_UBEEO_NOT_DEBUG"));
+            return;
+        };
         $key   = $input->get('hash');
         if ($key != $this->getHashKey()) {
             $event->updateEventResult(Status::KNOCKOUT);
@@ -78,7 +82,7 @@ final class PluginActor extends CMSPlugin implements SubscriberInterface
         try {
             $this->setUser();
             $jobData = $this->processFeed();
-            $result = [
+            $result  = [
                 't' => $this->totalCount,
                 'u' => $this->updateCount,
             ];
@@ -141,15 +145,16 @@ final class PluginActor extends CMSPlugin implements SubscriberInterface
     }
     public function onError(ErrorEvent $event)
     {
-
         $error = $event->getError();
-        if (!$error instanceof RouteNotFoundException) {
+        try {
+            if (((int) $event->getError()->getCode() !== 404)) {
+                return;
+            }
+        } catch (\Throwable) {
             return;
         }
 
-        if (((int) $event->getError()->getCode() !== 404)) {
-            return;
-        }
+
         $menu = $this->getApplication()->getMenu()->getActive();
         if ($menu->id != $this->params->get('menuid', 0)) {
             return;
@@ -338,6 +343,16 @@ data-environment=\"{$environment}\">
 
     private function taskUbeeo(ExecuteTaskEvent $event): int
     {
+
+        $app = $this->getApplication();
+        if (! ($app instanceof CMSApplication)) {
+            $msg = Text::_("PLG_SYSTEM_UBEEO_NOT_CLI");
+            $this->logTask($msg, 'error');
+            $event->setResult(['error' => $msg]);
+            //return OK, otherwise the task gets blocked
+            return Status::OK;
+        }
+
         try {
             $this->setUser();
             $this->logTask(Text::_("PLG_SYSTEM_UBEEO_LOG_TASK_START"), 'info');
@@ -643,7 +658,7 @@ data-environment=\"{$environment}\">
     /**
      * In hun WP plugin is 'text' leidend. hier is dat nu omgekeerd.
      * Als er textBlocks zijn wordt de text overschreven.
-     * 
+     *
      */
     private function getArticleBody($vacancie): object
     {
@@ -654,10 +669,10 @@ data-environment=\"{$environment}\">
         if (!empty($articleBody->textBlocks)) {
             $body = [];
             foreach ($articleBody->textBlocks as $block) {
-                $body[]=  sprintf('<!-- %s -->',$block->id);
-                $text = '';
+                $body[] =  \sprintf('<!-- %s -->', $block->id);
+                $text   = '';
                 if ($block->title ?? '') {
-                    $text = sprintf(
+                    $text = \sprintf(
                         '<%1$s>%2$s</%1$s>%3$s', // like in their WP plugin
                         $this->params->get('titlewrapper', 'h2'),
                         $block->title,
@@ -667,13 +682,12 @@ data-environment=\"{$environment}\">
                     $text = $block->text ?? '';
                 }
 
-              if ( $text) {
-                    $body[] = sprintf(
+                if ($text) {
+                    $body[] = \sprintf(
                         '<%1$s class="ub-text-item ub-text-item-%2$s">%3$s</%1$s>',
                         $this->params->get('textwrapper', 'div'),
                         $block->id,
                         $text
-
                     );
                 }
             }
@@ -684,17 +698,21 @@ data-environment=\"{$environment}\">
 
     private function processVacancie(object $vacancie): int
     {
+
         if (! $vacancie->id ?? 0) {
             return 0;
         }
-        $locationFields                   = $this->updateFieldsWithLocations($vacancie->locations ?? []);
+
+
+        $locationFields                      = $this->updateFieldsWithLocations($vacancie->locations ?? []);
         $publicationFields                   = $this->updateFieldsWithPublications($vacancie->publication ?? []);
-        $templateFields                   = $this->updateFieldsWithSingle('Template', $vacancie->template ?? []);
-        $departmentFields                   = $this->updateFieldsWithSingle('Department', $vacancie->department ?? []);
+        $templateFields                      = $this->updateFieldsWithSingle('Template', $vacancie->template ?? []);
+        $departmentFields                    = $this->updateFieldsWithSingle('Department', $vacancie->department ?? []);
 
         $classificationFields                    = $this->updateFieldsWithClassifications($vacancie->classifications ?? []);
 
-        $currentFields                    = array_merge($templateFields, $departmentFields, $classificationFields, $locationFields,  $publicationFields);
+        $currentFields                    = array_merge($templateFields, $departmentFields, $classificationFields, $locationFields, $publicationFields);
+
         $vacancyFieldName                 = $this->getVacancyField();
         $currentFields[$vacancyFieldName] = $vacancie->id;
         $article                          = $this->getArticleByVacancy($vacancie->id);
@@ -745,7 +763,10 @@ data-environment=\"{$environment}\">
             'com_fields'       => $currentFields,
         ];
         $this->updateCount++;
+
         $this->saveArticle($newArticle);
+
+
         return $vacancie->id;
     }
 
@@ -763,7 +784,15 @@ data-environment=\"{$environment}\">
      */
     private function generateNewTitle($categoryId, $title)
     {
-        $alias =  OutputFilter::stringURLSafe($title);
+        $app = $this->getApplication();
+        if ($app->get('unicodeslugs') == 1) {
+            $alias = OutputFilter::stringUrlUnicodeSlug($title);
+        } else {
+            $alias = OutputFilter::stringURLSafe($title);
+        }
+
+
+
         // Alter the title & alias
         $model      = $this->getModel('com_content', 'Article');
         $table      = $model->getTable();
@@ -783,10 +812,10 @@ data-environment=\"{$environment}\">
         if (!$single) {
             return; #Lege feed, maar zou wel geldig moeten zijn.
         }
-        $currentFields = [];
-        $fieldName = "single $field"; //avoid name collisions
+        $currentFields                  = [];
+        $fieldName                      = "single $field"; //avoid name collisions
         $fieldTableName                 = $this->getFieldTableName($fieldName);
-        $content = (object)[
+        $content                        = (object)[
             'label'  => ucwords($field),
             'values' => [
                 (object)[
@@ -808,11 +837,12 @@ data-environment=\"{$environment}\">
         }
         /*is altijd een enkel element. Maar zo is de return value consistent met de andere functies die velden bijwerken*/
         $currentFields = [];
-
-        $field = 'publication';
-        $content = (object)[
+        /*we unsetten en waarde, clone gebruiken */
+        $publications = clone $publications;
+        $field        = 'publication';
+        $content      = (object)[
             'label'  => ucwords($field),
-            'values' => []
+            'values' => [],
 
         ];
 
@@ -842,10 +872,11 @@ data-environment=\"{$environment}\">
     }
     private function updateFieldsWithLocations($locations)
     {
-        if (!\count($locations)) {
-            return; #Lege feed, maar zou wel geldig moeten zijn.
-        }
         $currentFields = [];
+        if (!\count($locations)) {
+            return $currentFields; #Lege feed, maar zou wel geldig moeten zijn.
+        }
+
         foreach ($locations as $location) {
             $field = 'location';
             //locations hebben geen language veld
@@ -929,7 +960,6 @@ data-environment=\"{$environment}\">
     {
 
         foreach ($this->extractedListfields as $id => $extractedOptions) {
-
             $fieldTableName = $this->getFieldTableName($id); // use the group name as prefix to avoid collisions
             $fieldTable     = $this->getFieldTable(['name' => $fieldTableName]);
             if ($fieldTable->type !== 'list') {
@@ -937,7 +967,7 @@ data-environment=\"{$environment}\">
             }
             $fieldParams    = json_decode($fieldTable->fieldparams, true);
             //dit voegt de bestaande velden toe. dit is nodig voor single PUT
-            //voor een volledige import worden de velden helemaal ververst 
+            //voor een volledige import worden de velden helemaal ververst
             if ($append) {
                 foreach ($fieldParams['options'] ?? [] as $option) {
                     $extractedOptions[] = $option;
@@ -1243,7 +1273,7 @@ data-environment=\"{$environment}\">
     private function getCache(): ?OutputController
     {
 
-        $lifeTime = $this->params->get('cache_time', 900);
+        $lifeTime = $this->params->get('cache_time', 60);
         if (!$lifeTime) {
             return null;
         }

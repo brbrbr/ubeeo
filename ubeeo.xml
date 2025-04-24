@@ -72,7 +72,7 @@
         <field addfieldprefix="Joomla\Component\Content\Administrator\Field" showon="portal!:0" name="portal_id" required="" label="PLG_SYSTEM_UBEEO_FIELD_PORTAL_ID_LBL" type="modal_article" description="PLG_SYSTEM_UBEEO_FIELD_PORTAL_ID_DESC">
           <option value="">JNONE</option>
         </field>
-        <field name="cache_time" type="number" filter="integer" default="3600" label="PLG_SYSTEM_UBEEO_FIELD_CACHE_TIME_LBL" description="PLG_SYSTEM_UBEEO_FIELD_CACHE_TIME_DESC"/>
+        <field name="cache_time" type="number" filter="integer" default="60" label="PLG_SYSTEM_UBEEO_FIELD_CACHE_TIME_LBL" description="PLG_SYSTEM_UBEEO_FIELD_CACHE_TIME_DESC"/>
         <field addfieldprefix="Brambring\Plugin\System\Ubeeo\Field" name="base_link" type="WebcronLink" label="PLG_SYSTEM_UBEEO_FIELD_BASE_LINK_LBL" description="PLG_SYSTEM_UBEEO_FIELD_BASE_LINK_DESC" class="alert alert-info"/>
       </fieldset>
     </fields>
